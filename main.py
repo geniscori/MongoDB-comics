@@ -1,51 +1,83 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Mar 21 10:19:29 2023
+
+@author: marc
+"""
+
+import json
 import pandas as pd
-import argparse
+from openpyxl import load_workbook
+
 from pymongo import MongoClient
 
-# Definir els arguments
-parser = argparse.ArgumentParser()
-parser.add_argument('-f', '--file', type=str, required=True, help='Nom del fitxer Excel amb les dades')
-parser.add_argument('--delete_all', action='store_true', help='Eliminar tots els continguts de la col·lecció')
-parser.add_argument('--bd', type=str, required=True, help='Nom de la base de dades')
 
-args = parser.parse_args()
+# En execució remota
+Host = 'localhost' 
+Port = 27017
 
-# Llegir el fitxer Excel
-try:
-    df = pd.read_excel(args.file)
-except FileNotFoundError:
-    raise FileNotFoundError("El nom del fitxer no s'ha introduït correctament")
+###################################### CONNEXIÓ ##############################################
 
-# Eliminar les files duplicades
-df.drop_duplicates(inplace=True)
+DSN = "mongodb://{}:{}".format(Host,Port)
 
-# Connectar amb la base de dades MongoDB
-conn = MongoClient(f"mongodb://localhost:27017/{args.bd}")
-db = conn['comic-happy']
+conn = MongoClient(DSN)
 
-# Esborrar tots els continguts de la col·lecció si s'ha especificat l'argument --delete_all
-if args.delete_all:
-    for col in db.list_collection_names():
-        db.get_collection(col).delete_many({})
-        db.drop_collection(col)
+############################# TRANSFERÈNCIA DE DADES AMB MONGO ##############################
 
-# Aquí podem crear les nostres colections
-'''
-Hem de crear les diferents collections
-'''
+#Selecciona la base de dades a utilitzar --> tenda
+bd = conn['COMICS']
 
-if not(len(db.list_collection_names())):
-    print("No s'ha creat cap col·lecció")
-else:
-    print(f"S'han creat les següents col·leccions {db.list_collection_names()}")
+file_path = './dades/Dades.xlsx'
 
 
+###############################################################################
+#### PUBLICACIONS #############################################################
+###############################################################################
 
-'''
-Fer les diferents queries
-'''
+publicacions = pd.read_excel(file_path, sheet_name = 'Colleccions-Publicacions')
 
+publicacions = publicacions.to_json('publicacions.json', orient='records', force_ascii=False)
 
+with open('publicacions.json', 'r', encoding='utf-8') as jsonfile:
+    dades = json.load(jsonfile)
+    
+    bd.drop_collection('colleccions')
+    coll = bd.create_collection('colleccions')
+    for d in dades:
+        coll.insert_one(d)
+        
+###############################################################################
+#### PERSONATGES ##############################################################
+###############################################################################
 
-# Tancar la connexió amb la base de dades MongoDB
+personatges = pd.read_excel(file_path, sheet_name = 'Personatges')
+
+personatges = personatges.to_json('personatges.json', orient='records', force_ascii=False)
+
+with open('personatges.json', 'r', encoding='utf-8') as jsonfile:
+    dades = json.load(jsonfile)
+    
+    bd.drop_collection('personatges')
+    coll = bd.create_collection('personatges')
+    for d in dades:
+        coll.insert_one(d)
+        
+        
+###############################################################################
+#### ARTISTES #################################################################
+###############################################################################
+
+artistes = pd.read_excel(file_path, sheet_name = 'Artistes')
+
+artistes = artistes.to_json('artistes.json', orient='records', force_ascii=False)
+
+with open('artistes.json', 'r', encoding='utf-8') as jsonfile:
+    dades = json.load(jsonfile)
+    
+    bd.drop_collection('artistes')
+    coll = bd.create_collection('artistes')
+    for d in dades:
+        coll.insert_one(d)
+
 conn.close()
