@@ -42,10 +42,12 @@ publicacions = publicacions.to_json('publicacions.json', orient='records', force
 with open('publicacions.json', 'r', encoding='utf-8') as jsonfile:
     dades = json.load(jsonfile)
     
-    bd.drop_collection('colleccions')
-    coll = bd.create_collection('colleccions')
+    bd.drop_collection('publicacions')
+    pub = bd.create_collection('publicacions')
+    
     for d in dades:
-        coll.insert_one(d)
+        pub.insert_one(d)
+        
         
 ###############################################################################
 #### PERSONATGES ##############################################################
@@ -62,7 +64,8 @@ with open('personatges.json', 'r', encoding='utf-8') as jsonfile:
     coll = bd.create_collection('personatges')
     for d in dades:
         coll.insert_one(d)
-        
+
+
         
 ###############################################################################
 #### ARTISTES #################################################################
@@ -79,5 +82,71 @@ with open('artistes.json', 'r', encoding='utf-8') as jsonfile:
     coll = bd.create_collection('artistes')
     for d in dades:
         coll.insert_one(d)
+        
+###############################################################################
+#### PATRONS DE DISSENY #######################################################
+###############################################################################
+
+
+bd.publicacions.aggregate([
+   {"$project" : {"NomEditorial" : 1, 
+                  "responsable" : 1, 
+                  "adreca" : 1, 
+                  "pais" : 1}},
+   {"$out" : "editorial"}])
+
+    
+bd.publicacions.aggregate([
+    {"$project" : {"NomColleccio" : 1, 
+                   "total_exemplars" : 1, 
+                   "genere" : 1, 
+                   "idioma" : 1, 
+                   "any_inici" : 1, 
+                   "any_fi" : 1, 
+                   "tancada" : 1, 
+                   "NomEditorial" : 1}},
+    {"$out" : "colleccio"}])
+
+
+bd.publicacions.aggregate([
+    {"$project" : {"ISBN" : 1,
+                   "titol" : 1, 
+                   "stock" : 1, 
+                   "autor" : 1, 
+                   "preu" : 1, 
+                   "num_pagines": 1,
+                   "NomColleccio" : 1, 
+                   "guionistes" : 1, 
+                   "dibuixants" : 1
+        }},
+    {"$out" : "publicacions"}])
+
+pipeline = [
+    {
+        "$lookup":
+        {
+            "from": "personatges",
+            "localField": "ISBN",
+            "foreignField": "isbn",
+            "as": "personatges"
+        }
+    },
+    {
+        "$project":
+        {
+            "_id": 0,
+            "ISBN": 1,
+            "title": 1,
+            "author": 1,
+            "publisher": 1,
+            "personatges.name": 1,
+            "personatges.gender": 1,
+            "personatges.age": 1
+        }
+    }
+]
+
+
+
 
 conn.close()
