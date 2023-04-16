@@ -1,0 +1,61 @@
+\documentclass{article}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[catalan]{babel}
+\usepackage{mathtools}
+\usepackage[a4paper]{geometry}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amssymb}
+\geometry{top=1.5cm, bottom=3cm, left=2.5cm, right=2.5cm}
+
+
+\begin{document}
+\begin{titlepage}
+	\centering
+	\vspace*{1cm}
+	{\bfseries\Large Matem\`atica Computacional i Anal\'itica de Dades \par}
+	\vspace{0.5cm}
+	{\scshape\Large Bases de Dades no Relacionals \par}
+	\vspace{6cm}
+	{\scshape\Huge El C\`omic Feliç \par}
+	\vspace{0.5cm}
+	{\itshape\Large Informe del Projecte \par}
+	\vfill
+	\vfill
+	{\Large Marc Bosom - 1606776 \par}
+	{\Large Gen\'is C\'ordoba - 1603639 \par}
+	{\Large Laia Escursell - 1600578 \par}
+	{\Large Abril P\'erez - 1600601 \par}
+	\vfill
+	{\Large Abril 2023}
+\end{titlepage}
+
+\section{Introducció}
+En aquest projecte es treballarà el disseny, la implementació i la consulta a una base de dades en MongoDB. A partir dels requeriments 
+i les dades que es subministraran, s’ha implementat un script en Python capaç de processar i inserir les dades en una base de dades de 
+MongoDB. Per tal de demostrar que la nostra base de dades funciona correctament, s'ha fet un conjunt de proves: "joc de proves", que són un seguit de queries per tal de demostrar que la base de dades està ben estructurada i dissenyada. \\
+
+Tots els arxius de Python necessaris i l'arxiu a es troben al \href{https://github.com/genisgui/MongoDB-comics.git}{Repositori GitHub}. Seguint les instruccions que es troben al fitxer \texttt{README} es poden obtenir i posteriorment executar per tal de visualitzar les diferents queries del joc de proves.
+
+
+\section{Creaci\'o de les col·leccions}
+Per convertir el model Entitat-Relació a un conjunt de col·leccions per a l'ús amb PyMongo, és necessari tenir en compte tant el propi disseny ER com les consultes que es faran posteriorment, perqu\`e aquestes ens indiquen la informaci\'o que haur\`a de ser m\'es accessible i la que no es necessita amb tanta freq\"u\`encia.\\
+
+\subsection{Selecci\'o de patrons de disseny}
+El primer que cal fer per transformar el model ER a col·leccions \'es analitzar les relacions que existeixen entre les diferents entitats i decidir quin dels patrons de conversi\'o a col·leccions s'adecua millor a cada cas.
+
+\subsubsection*{Relaci\'o entre \textbf{Editorial} i \textbf{Col·lecci\'o}}
+Aquesta \'es una relaci\'o \textbf{1-N}, \'es a dir, que una editorial pot tenir diferents col·leccions per\`o una col·lecci\'o no pot pert\`anyer a diferents editorials. Aix\`o ens deixa amb dues opcions principals: referenciar les diferents col·leccions dins de l'editorial, o encastar tota la informaci\'o de les col·leccions dins de l'editorial. Observant el conjunt de consultes que cal fer, veiem que nom\'es n'hi ha dues en les que es necessiten les dues entitats i, en ambd\'os casos, nom\'es es necessita el nom de l'editorial, no hi ha cap altre atribut necessari d'aquesta entitat. Per aquest motiu s'ha decidit aplicar el patr\'o referencial: crearem una col·lecci\'o per cada una de les dues entitats, on la col·lecci\'o \textbf{Editorial} tindr\`a per \texttt{_id} el seu nom i l'altra col·lecci'o tindr\`a un camp que indicar\`a el nom de l'editorial a la qual pertany.
+
+\subsubsection*{Relaci\'o entre \textbf{Artista} i \textbf{Publicaci\'o}}
+En aquest cas, aquesta relaci\'o \'es \textbf{N-N}, un artista pot haver contribuit a diferents publicacions i una publicacio pot comptar amb diferents artistes. Una peculiaritat d'aquesta relaci\'o \'es que est\`a formada per dos relacions diferents, una pels dibuixants i una altra pels guionistes, per tant, ser\`a necessari traspassar aquesta informaci\'o a les col·leccions. Per aquest cas, i tenint en compte que les consultes estan relacionades amb el tipus de contribuci\'o feta i al nom art\'istic de l'artista, hem decidit utilitzar una refer\`encia estesa. Crearem una col·lecci\'o tant per artista com per publicaci\'o, on la primera tindr\`a per \texttt{_id} el nom art\'istic i la segona el tindr\`a de tipus \texttt{ObjectId}. Afegirem a la col·lecci\'o \texttt{Publicaci\'o} un camp que ser\`a una llista de subdocuments, on cada un d'aquests cont\'e l'id d'artista (el seu nom) i la contribuci\'o que ha fet a la publicaci\'o (dibuixant o guionista).
+
+\subsubsection*{Relaci\'o entre \textbf{Publicaci\'o} i \textbf{Personatge}}
+Aquesta tamb\'e \'es una relaci\'o \textbf{N-N}, una publicaci\'o pot tenir diferents personatges i un personatge pot pert\`anyer a diferents publicacions. En aquest cas, hem vist que cada personatge no t\'e gaire informaci\'o, nom\'es el nom i el tipus, i, a m\'es a m\'es, les consultes relacionades amb aquestes dues entitats demanen informaci\'o tant del nom com del tipus de personatge. Per tots aquests motius hem decidit que la millor opci\'o \'es encastar els personatges dins de cada publicaci\'o. Est\`a clar que aix\`o provocar\`a un problema de duplicitat de dades: com que hi ha personatges que pertanyen a divereses publicacions, la seva informaci\'o apareixer\`a diferents vegades dins de la base de dades, per\`o tenint en compte que cada personatge t\'e molt poca informaci\'o, creiem que val la pena fer l'encastat.
+
+\subsubsection*{Relaci\'o entre \textb{Col·lecci\'o} i {Publicaci\'o}}
+\end{document}
