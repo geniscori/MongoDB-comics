@@ -8,34 +8,27 @@ Created on Tue Mar 21 10:19:29 2023
 
 import json
 import pandas as pd
-from openpyxl import load_workbook
+import argparse
 
 from pymongo import MongoClient
 
 
-# En execució remota
-Host = 'localhost' 
-Port = 27017
+parser = argparse.ArgumentParser()
+parser.add_argument('-f', '--file', type = str, required = True, help = 'Nom del fitxer Excel amb les dades')
+parser.add_argument('--delete_all', action = 'store_true', help = 'Eliminar tots els continguts de la col·lecció')
+parser.add_argument('--bd', type = str, required = True, help = 'Nom de la base de dades')
 
-###################################### CONNEXIÓ ##############################################
+args = parser.parse_args()
 
-DSN = "mongodb://{}:{}".format(Host,Port)
-
-conn = MongoClient(DSN)
-
-############################# TRANSFERÈNCIA DE DADES AMB MONGO ##############################
-
-#Selecciona la base de dades a utilitzar --> tenda
+conn = MongoClient(f"mongodb://localhost:27017/{args.bd}")
 bd = conn['COMICS']
-
-file_path = './dades/Dades.xlsx'
 
 
 ###############################################################################
 #### PUBLICACIONS #############################################################
 ###############################################################################
 
-publicacions = pd.read_excel(file_path, sheet_name = 'Colleccions-Publicacions')
+publicacions = pd.read_excel(args.file, sheet_name = 'Colleccions-Publicacions')
 
 publicacions = publicacions.to_json('publicacions.json', orient='records', force_ascii=False)
 
@@ -53,7 +46,7 @@ with open('publicacions.json', 'r', encoding='utf-8') as jsonfile:
 #### PERSONATGES ##############################################################
 ###############################################################################
 
-personatges = pd.read_excel(file_path, sheet_name = 'Personatges')
+personatges = pd.read_excel(args.file, sheet_name = 'Personatges')
 
 personatges = personatges.to_json('personatges.json', orient='records', force_ascii=False)
 
@@ -71,7 +64,7 @@ with open('personatges.json', 'r', encoding='utf-8') as jsonfile:
 #### ARTISTES #################################################################
 ###############################################################################
 
-artistes = pd.read_excel(file_path, sheet_name = 'Artistes')
+artistes = pd.read_excel(args.file, sheet_name = 'Artistes')
 
 artistes = artistes.to_json('artistes.json', orient='records', force_ascii=False)
 
