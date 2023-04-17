@@ -10,6 +10,8 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{amssymb}
+\usepackage{tabularx}
+\usepackage{booktabs}
 \geometry{top=1.5cm, bottom=3cm, left=2.5cm, right=2.5cm}
 
 
@@ -58,4 +60,54 @@ En aquest cas, aquesta relaci\'o \'es \textbf{N-N}, un artista pot haver contrib
 Aquesta tamb\'e \'es una relaci\'o \textbf{N-N}, una publicaci\'o pot tenir diferents personatges i un personatge pot pert\`anyer a diferents publicacions. En aquest cas, hem vist que cada personatge no t\'e gaire informaci\'o, nom\'es el nom i el tipus, i, a m\'es a m\'es, les consultes relacionades amb aquestes dues entitats demanen informaci\'o tant del nom com del tipus de personatge. Per tots aquests motius hem decidit que la millor opci\'o \'es encastar els personatges dins de cada publicaci\'o. Est\`a clar que aix\`o provocar\`a un problema de duplicitat de dades: com que hi ha personatges que pertanyen a divereses publicacions, la seva informaci\'o apareixer\`a diferents vegades dins de la base de dades, per\`o tenint en compte que cada personatge t\'e molt poca informaci\'o, creiem que val la pena fer l'encastat.
 
 \subsubsection*{Relaci\'o entre \textb{Col·lecci\'o} i {Publicaci\'o}}
+Aquesta relaci\'o \'es de tipus \textbf{1-N}, \'es a dir, que una col·lecci\'o pot tenir diverses publicacions per\`o una publicaci\'o no pot pert\`anyer a m\'es d'una col·lecci\'o. Moltes de les consultes demanen molta informaci\'o creuada entre col·leccions i publicacions, de manera que en un primer moment haviem decidit encastar les publicacions dins de la seva col·lecci\'o. Tanmateix, al començar a fer la programaci\'o ens vam adonar que la gran quantitat de publicacions que podia arribar a tenir una col·lecci\'o i el gran nombre d'atributs que tenen les publicacions feien que cada un dels documents de les col·leccions f\'os molt extens i complex, de manera que finalment s'ha decidit utilitzar un link. S'ha posat l'ISBN com a \textbf{\_id} de la publicaci\'o, i cada una de les col·leccions t\'e un camp amb la llista d'ids de les publicacions que cont\'e.
+
+\subsection{Estructura de les col·leccions}
+Finalment, s'han creat quatre col·leccions diferents: \textbf{Col·lecci\'o}, \textbf{Publicaci\'o}, \textbf{Artista} i \textbf{Editorial}. L'estructura que tenen aquestes quatre col·leccions s\'on la seg\"uent:
+
+\begin{table}[htbp]
+\centering
+\caption{Estructura de dades per a una llibreria de còmics}
+\label{tab:estructura_dades}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Editorial} & \\
+\midrule
+nom & \texttt{string} \\
+responsable & \texttt{string} \\
+pa\'is & \texttt{string} \\
+adreça & \texttt{subdocument}: carrer (\texttt{string}), n\'umero (\texttt{int}) i poblaci\'o (\texttt{string})\\
+\midrule
+\textbf{Col·lecció} & \\
+\midrule
+nom & \texttt{string} \\
+editor & \texttt{string} (\texttt{\_id} de l'editorial) \\
+gènere & \texttt{string} \\
+idioma & \texttt{string} \\
+any d'inici & \texttt{int} \\
+any de finalització & \texttt{int} \\
+acabada & \texttt{bool} \\
+publicacions & llista de documents de publicacions \\
+\midrule
+\textbf{Publicació} & \\
+\midrule
+ISBN & \texttt{string} \\
+títol & \texttt{string} \\
+autor & \texttt{string} \\
+nombre de pàgines & \texttt{int} \\
+stock & \texttt{int} \\
+preu & \texttt{float} \\
+personatges & \texttt{list} of \texttt{subdocuments}: nom (\texttt{string}) i tipus (\texttt{string}) de personatge \\
+artistes & \texttt{list} of \texttt{subdocuments}: \texttt{\_id} (\texttt{string}) i contribuci\'o (\texttt{string}) de l'artista\\
+\midrule
+\textbf{Artista} & \\
+\midrule
+nom artístic & \texttt{string} \\
+nom & \texttt{string} \\
+cognoms & \texttt{string} \\
+data de naixement & \texttt{Date} \\
+país & \texttt{string} \\
+\bottomrule
+\end{tabularx}
+\end{table}
 \end{document}
