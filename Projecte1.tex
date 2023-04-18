@@ -1,0 +1,161 @@
+\documentclass{article}
+
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[catalan]{babel}
+\usepackage{mathtools}
+\usepackage[a4paper]{geometry}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{amssymb}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\geometry{top=1.5cm, bottom=3cm, left=2.5cm, right=2.5cm}
+\newcommand{\imatge}[2]{
+\begin{center}
+    \includegraphics[scale = #1]{#2.png}
+\end{center}
+}
+
+
+\begin{document}
+\begin{titlepage}
+	\centering
+	\vspace*{1cm}
+	{\bfseries\Large Matem\`atica Computacional i Anal\'itica de Dades \par}
+	\vspace{0.5cm}
+	{\scshape\Large Bases de Dades no Relacionals \par}
+	\vspace{6cm}
+	{\scshape\Huge El C\`omic Feliç \par}
+	\vspace{0.5cm}
+	{\itshape\Large Informe del Projecte \par}
+	\vfill
+	\vfill
+	{\Large Marc Bosom - 1606776 \par}
+	{\Large Gen\'is C\'ordoba - 1603639 \par}
+	{\Large Laia Escursell - 1600578 \par}
+	{\Large Abril P\'erez - 1600601 \par}
+	\vfill
+	{\Large Abril 2023}
+\end{titlepage}
+
+\section{Introducció}
+En aquest projecte es treballarà el disseny, la implementació i la consulta a una base de dades en MongoDB. A partir dels requeriments 
+i les dades que es subministraran, s’ha implementat un script en Python capaç de processar i inserir les dades en una base de dades de 
+MongoDB. Per tal de demostrar que la nostra base de dades funciona correctament, s'ha fet un conjunt de proves: "joc de proves", que són un seguit de queries per tal de demostrar que la base de dades està ben estructurada i dissenyada. \\
+
+Tots els arxius de Python necessaris i l'arxiu a es troben al \href{https://github.com/genisgui/MongoDB-comics.git}{Repositori GitHub}. Seguint les instruccions que es troben al fitxer \texttt{README} es poden obtenir i posteriorment executar per tal de visualitzar les diferents queries del joc de proves.
+
+
+\section{Creaci\'o de les col·leccions}
+Per convertir el model Entitat-Relació a un conjunt de col·leccions per a l'ús amb PyMongo, és necessari tenir en compte tant el propi disseny ER com les consultes que es faran posteriorment, perqu\`e aquestes ens indiquen la informaci\'o que haur\`a de ser m\'es accessible i la que no es necessita amb tanta freq\"u\`encia.\\
+
+\subsection{Selecci\'o de patrons de disseny}
+El primer que cal fer per transformar el model ER a col·leccions \'es analitzar les relacions que existeixen entre les diferents entitats i decidir quin dels patrons de conversi\'o a col·leccions s'adecua millor a cada cas.
+
+\subsubsection*{Relaci\'o entre \textbf{Editorial} i \textbf{Col·lecci\'o}}
+Aquesta \'es una relaci\'o \textbf{1-N}, \'es a dir, que una editorial pot tenir diferents col·leccions per\`o una col·lecci\'o no pot pert\`anyer a diferents editorials. Aix\`o ens deixa amb dues opcions principals: referenciar les diferents col·leccions dins de l'editorial, o encastar tota la informaci\'o de les col·leccions dins de l'editorial. Observant el conjunt de consultes que cal fer, veiem que nom\'es n'hi ha dues en les que es necessiten les dues entitats i, en ambd\'os casos, nom\'es es necessita el nom de l'editorial, no hi ha cap altre atribut necessari d'aquesta entitat. Per aquest motiu s'ha decidit aplicar el patr\'o referencial: crearem una col·lecci\'o per cada una de les dues entitats, on la col·lecci\'o \textbf{Editorial} tindr\`a per \texttt{\_id} el seu nom i l'altra col·lecci'o tindr\`a un camp que indicar\`a el nom de l'editorial a la qual pertany.
+
+\subsubsection*{Relaci\'o entre \textbf{Artista} i \textbf{Publicaci\'o}}
+En aquest cas, aquesta relaci\'o \'es \textbf{N-N}, un artista pot haver contribuit a diferents publicacions i una publicacio pot comptar amb diferents artistes. Una peculiaritat d'aquesta relaci\'o \'es que est\`a formada per dos relacions diferents, una pels dibuixants i una altra pels guionistes, per tant, ser\`a necessari traspassar aquesta informaci\'o a les col·leccions. Per aquest cas, i tenint en compte que les consultes estan relacionades amb el tipus de contribuci\'o feta i al nom art\'istic de l'artista, hem decidit utilitzar una refer\`encia estesa. Crearem una col·lecci\'o tant per artista com per publicaci\'o, on la primera tindr\`a per \texttt{\_id} el nom art\'istic i la segona el tindr\`a de tipus \texttt{ObjectId}. Afegirem a la col·lecci\'o \texttt{Publicaci\'o} un camp que ser\`a una llista de subdocuments, on cada un d'aquests cont\'e l'id d'artista (el seu nom) i la contribuci\'o que ha fet a la publicaci\'o (dibuixant o guionista).
+
+\subsubsection*{Relaci\'o entre \textbf{Publicaci\'o} i \textbf{Personatge}}
+Aquesta tamb\'e \'es una relaci\'o \textbf{N-N}, una publicaci\'o pot tenir diferents personatges i un personatge pot pert\`anyer a diferents publicacions. En aquest cas, hem vist que cada personatge no t\'e gaire informaci\'o, nom\'es el nom i el tipus, i, a m\'es a m\'es, les consultes relacionades amb aquestes dues entitats demanen informaci\'o tant del nom com del tipus de personatge. Per tots aquests motius hem decidit que la millor opci\'o \'es encastar els personatges dins de cada publicaci\'o. Est\`a clar que aix\`o provocar\`a un problema de duplicitat de dades: com que hi ha personatges que pertanyen a divereses publicacions, la seva informaci\'o apareixer\`a diferents vegades dins de la base de dades, per\`o tenint en compte que cada personatge t\'e molt poca informaci\'o, creiem que val la pena fer l'encastat.
+
+\subsubsection*{Relaci\'o entre \textbf{Col·lecci\'o} i \textbf{Publicaci\'o}}
+Aquesta relaci\'o \'es de tipus \textbf{1-N}, \'es a dir, que una col·lecci\'o pot tenir diverses publicacions per\`o una publicaci\'o no pot pert\`anyer a m\'es d'una col·lecci\'o. Moltes de les consultes demanen molta informaci\'o creuada entre col·leccions i publicacions, de manera que en un primer moment haviem decidit encastar les publicacions dins de la seva col·lecci\'o. Tanmateix, al començar a fer la programaci\'o ens vam adonar que la gran quantitat de publicacions que podia arribar a tenir una col·lecci\'o i el gran nombre d'atributs que tenen les publicacions feien que cada un dels documents de les col·leccions f\'os molt extens i complex, de manera que finalment s'ha decidit utilitzar un link. S'ha posat l'ISBN com a \textbf{\_id} de la publicaci\'o, i cada una de les col·leccions t\'e un camp amb la llista d'ids de les publicacions que cont\'e.
+
+\subsection{Estructura de les col·leccions}
+Finalment, s'han creat quatre col·leccions diferents: \textbf{Col·lecci\'o}, \textbf{Publicaci\'o}, \textbf{Artista} i \textbf{Editorial}. L'estructura que tenen aquestes quatre col·leccions s\'on la seg\"uent:
+
+\begin{table}[htbp]
+\centering
+\caption{Estructura de dades per a una llibreria de còmics}
+\label{tab:estructura_dades}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Editorial} & \\
+\midrule
+nom & \texttt{string} \\
+responsable & \texttt{string} \\
+pa\'is & \texttt{string} \\
+adreça & \texttt{subdocument}: carrer (\texttt{string}), n\'umero (\texttt{int}) i poblaci\'o (\texttt{string})\\
+\midrule
+\textbf{Col·lecció} & \\
+\midrule
+nom & \texttt{string} \\
+exemplars totals & \texttt{int} \\
+editorial & \texttt{string} (\texttt{\_id} de l'editorial) \\
+gènere & \texttt{string} \\
+idioma & \texttt{string} \\
+any d'inici & \texttt{int} \\
+any de finalització & \texttt{int} \\
+acabada & \texttt{bool} \\
+publicacions & \texttt{list} of \texttt{string} (\texttt{\_id} de les publicacions) \\
+\midrule
+\textbf{Publicació} & \\
+\midrule
+ISBN & \texttt{string} \\
+títol & \texttt{string} \\
+autor & \texttt{string} \\
+nombre de pàgines & \texttt{int} \\
+stock & \texttt{int} \\
+preu & \texttt{float} \\
+personatges & \texttt{list} of \texttt{subdocuments}: nom (\texttt{string}) i tipus (\texttt{string}) de personatge \\
+dibuixants & \texttt{list} of \texttt{strings} (\texttt{\_id} de l'artista dibuixant)\\
+guionistes & \texttt{list} of \texttt{strings} (\texttt{\_id} de l'artista guionista)\\
+\midrule
+\textbf{Artista} & \\
+\midrule
+nom artístic & \texttt{string} \\
+nom & \texttt{string} \\
+cognoms & \texttt{string} \\
+data de naixement & \texttt{Date} \\
+país & \texttt{string} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Joc de Proves}
+Ara que ja hem creat les col·leccions, farem diferents consultes per comprovar el correcte funcionament de la nostra estructura. A continuaci\'o es detallaran les consultes que s'han fet i els resultats obtinguts per cada una d'elles.
+\subsection*{Problema 1}
+Les 5 publicacions amb major preu. Mostrar només el títol i preu.
+\imatge{1}{1}
+\subsection*{Problema 2}
+Valor màxim, mínim i mitjà del preus de les publicacions de l’editorial Juniper Books.
+\imatge{1}{2}
+\subsection*{Problema 3}
+Artistes (nom artístic) que participen en més de 5 publicacions com a dibuixant.
+\imatge{1}{3}
+\subsection*{Problema 4}
+Numero de col·leccions per gènere. Mostra gènere i número total.
+\imatge{1}{4}
+\subsection*{Problema 5}
+Per cada editorial, mostrar el recompte de col·leccions finalitzades i no finalitzades.
+\imatge{1}{5}
+\subsection*{Problema 6}
+Mostrar les 2 col·leccions ja finalitzades amb més publicacions. Mostrar editorial i nom col·lecció.
+\imatge{1}{6}
+\subsection*{Problema 7}
+Mostrar el país d’origen de l’artista o artistes que han fet més guions.
+\imatge{1}{7}
+\subsection*{Problema 8}
+Mostrar les publicacions amb tots els personatges de tipus “heroe”. Volem destacar que hem entès que hem d'imprimir per pantalla el títol de les publicacions amb tots els seus personatges que siguin del tipus heroi. Per tant, primer hem imprès el títol i, a continuació, la llista dels personatges que compleixin la característica especificada.
+\imatge{1}{8}
+\subsection*{Problema 9}
+Modificar el preu de les publicacions amb stock superior a 20 exemplars i incrementar-lo un 25\%.
+\imatge{1}{9}
+\subsection*{Problema 10}
+Mostrar ISBN i títol de les publicacions conjuntament amb tota la seva informació dels personatges.
+\imatge{1}{10}
+
+\section{Distribuci\'o de la c\`arrega de treball}
+Inicialment vam organitzar una reuni\'o on vam decidir quins patrons de disseny utilitzariem i ens vam distribuir les tasques. De forma general, el Marc Bosom i el Gen\'is C\'ordoba s'han orientat m\'es a la creaci\'o de l'script de python, la Laia Escursell a les consultes, i l'Abril P\'erez a la redacci\'o de l'informe, tot i que a la pr\`actica hi ha moltes tasquest que s'han fet conjuntament encara que nom\'es una persona hagi fet el commit de la feina. Quan aquesta s'ha fet conjuntament s'ha especificat a la descripci\'o del commit qui hi ha col·laborat encara que aquesta persona no hagi fet el commit a GitHub.
+
+\section{Conclusions}
+Aquesta pr\`actica ens ha sigut molt \'ultil per aprendre a utilitzar de forma paralela el mongodb amb python i el NoSQLBooster. Fins ara no haviem utilitzat de forma conjunta aquestes dues eines, i hem vist que \'es una molt bona opci\'o crear les col·leccions a trav\'es de python i despr\'es escriure les queries al NoSQLBooster, que permet una execuci\'o molt pr\`actica i m\'es visual.\\
+Tamb\'e hem vist que la creaci\'o de les col·leccions a partir de documents excel \'es m\'es complicada del que sembla a simple vista, perqu\`e cal tenir en compte molts aspectes, com el tipus de dades, els documents duplicats, les relacions entre col·leccions, etc.
+
+\end{document}
