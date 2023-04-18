@@ -56,15 +56,15 @@ Per convertir el model Entitat-Relació a un conjunt de col·leccions per a l'ú
 El primer que cal fer per transformar el model ER a col·leccions \'es analitzar les relacions que existeixen entre les diferents entitats i decidir quin dels patrons de conversi\'o a col·leccions s'adecua millor a cada cas.
 
 \subsubsection*{Relaci\'o entre \textbf{Editorial} i \textbf{Col·lecci\'o}}
-Aquesta \'es una relaci\'o \textbf{1-N}, \'es a dir, que una editorial pot tenir diferents col·leccions per\`o una col·lecci\'o no pot pert\`anyer a diferents editorials. Aix\`o ens deixa amb dues opcions principals: referenciar les diferents col·leccions dins de l'editorial, o encastar tota la informaci\'o de les col·leccions dins de l'editorial. Observant el conjunt de consultes que cal fer, veiem que nom\'es n'hi ha dues en les que es necessiten les dues entitats i, en ambd\'os casos, nom\'es es necessita el nom de l'editorial, no hi ha cap altre atribut necessari d'aquesta entitat. Per aquest motiu s'ha decidit aplicar el patr\'o referencial: crearem una col·lecci\'o per cada una de les dues entitats, on la col·lecci\'o \textbf{Editorial} tindr\`a per \texttt{_id} el seu nom i l'altra col·lecci'o tindr\`a un camp que indicar\`a el nom de l'editorial a la qual pertany.
+Aquesta \'es una relaci\'o \textbf{1-N}, \'es a dir, que una editorial pot tenir diferents col·leccions per\`o una col·lecci\'o no pot pert\`anyer a diferents editorials. Aix\`o ens deixa amb dues opcions principals: referenciar les diferents col·leccions dins de l'editorial, o encastar tota la informaci\'o de les col·leccions dins de l'editorial. Observant el conjunt de consultes que cal fer, veiem que nom\'es n'hi ha dues en les que es necessiten les dues entitats i, en ambd\'os casos, nom\'es es necessita el nom de l'editorial, no hi ha cap altre atribut necessari d'aquesta entitat. Per aquest motiu s'ha decidit aplicar el patr\'o referencial: crearem una col·lecci\'o per cada una de les dues entitats, on la col·lecci\'o \textbf{Editorial} tindr\`a per \texttt{\_id} el seu nom i l'altra col·lecci'o tindr\`a un camp que indicar\`a el nom de l'editorial a la qual pertany.
 
 \subsubsection*{Relaci\'o entre \textbf{Artista} i \textbf{Publicaci\'o}}
-En aquest cas, aquesta relaci\'o \'es \textbf{N-N}, un artista pot haver contribuit a diferents publicacions i una publicacio pot comptar amb diferents artistes. Una peculiaritat d'aquesta relaci\'o \'es que est\`a formada per dos relacions diferents, una pels dibuixants i una altra pels guionistes, per tant, ser\`a necessari traspassar aquesta informaci\'o a les col·leccions. Per aquest cas, i tenint en compte que les consultes estan relacionades amb el tipus de contribuci\'o feta i al nom art\'istic de l'artista, hem decidit utilitzar una refer\`encia estesa. Crearem una col·lecci\'o tant per artista com per publicaci\'o, on la primera tindr\`a per \texttt{_id} el nom art\'istic i la segona el tindr\`a de tipus \texttt{ObjectId}. Afegirem a la col·lecci\'o \texttt{Publicaci\'o} un camp que ser\`a una llista de subdocuments, on cada un d'aquests cont\'e l'id d'artista (el seu nom) i la contribuci\'o que ha fet a la publicaci\'o (dibuixant o guionista).
+En aquest cas, aquesta relaci\'o \'es \textbf{N-N}, un artista pot haver contribuit a diferents publicacions i una publicacio pot comptar amb diferents artistes. Una peculiaritat d'aquesta relaci\'o \'es que est\`a formada per dos relacions diferents, una pels dibuixants i una altra pels guionistes, per tant, ser\`a necessari traspassar aquesta informaci\'o a les col·leccions. Per aquest cas, i tenint en compte que les consultes estan relacionades amb el tipus de contribuci\'o feta i al nom art\'istic de l'artista, hem decidit utilitzar una refer\`encia estesa. Crearem una col·lecci\'o tant per artista com per publicaci\'o, on la primera tindr\`a per \texttt{\_id} el nom art\'istic i la segona el tindr\`a de tipus \texttt{ObjectId}. Afegirem a la col·lecci\'o \texttt{Publicaci\'o} un camp que ser\`a una llista de subdocuments, on cada un d'aquests cont\'e l'id d'artista (el seu nom) i la contribuci\'o que ha fet a la publicaci\'o (dibuixant o guionista).
 
 \subsubsection*{Relaci\'o entre \textbf{Publicaci\'o} i \textbf{Personatge}}
 Aquesta tamb\'e \'es una relaci\'o \textbf{N-N}, una publicaci\'o pot tenir diferents personatges i un personatge pot pert\`anyer a diferents publicacions. En aquest cas, hem vist que cada personatge no t\'e gaire informaci\'o, nom\'es el nom i el tipus, i, a m\'es a m\'es, les consultes relacionades amb aquestes dues entitats demanen informaci\'o tant del nom com del tipus de personatge. Per tots aquests motius hem decidit que la millor opci\'o \'es encastar els personatges dins de cada publicaci\'o. Est\`a clar que aix\`o provocar\`a un problema de duplicitat de dades: com que hi ha personatges que pertanyen a divereses publicacions, la seva informaci\'o apareixer\`a diferents vegades dins de la base de dades, per\`o tenint en compte que cada personatge t\'e molt poca informaci\'o, creiem que val la pena fer l'encastat.
 
-\subsubsection*{Relaci\'o entre \textb{Col·lecci\'o} i {Publicaci\'o}}
+\subsubsection*{Relaci\'o entre \textbf{Col·lecci\'o} i \textbf{Publicaci\'o}}
 Aquesta relaci\'o \'es de tipus \textbf{1-N}, \'es a dir, que una col·lecci\'o pot tenir diverses publicacions per\`o una publicaci\'o no pot pert\`anyer a m\'es d'una col·lecci\'o. Moltes de les consultes demanen molta informaci\'o creuada entre col·leccions i publicacions, de manera que en un primer moment haviem decidit encastar les publicacions dins de la seva col·lecci\'o. Tanmateix, al començar a fer la programaci\'o ens vam adonar que la gran quantitat de publicacions que podia arribar a tenir una col·lecci\'o i el gran nombre d'atributs que tenen les publicacions feien que cada un dels documents de les col·leccions f\'os molt extens i complex, de manera que finalment s'ha decidit utilitzar un link. S'ha posat l'ISBN com a \textbf{\_id} de la publicaci\'o, i cada una de les col·leccions t\'e un camp amb la llista d'ids de les publicacions que cont\'e.
 
 \subsection{Estructura de les col·leccions}
@@ -93,7 +93,7 @@ idioma & \texttt{string} \\
 any d'inici & \texttt{int} \\
 any de finalització & \texttt{int} \\
 acabada & \texttt{bool} \\
-publicacions & \texttt{list} of \texttt{string} (\texttt{_id} de les publicacions) \\
+publicacions & \texttt{list} of \texttt{string} (\texttt{\_id} de les publicacions) \\
 \midrule
 \textbf{Publicació} & \\
 \midrule
@@ -142,7 +142,7 @@ Mostrar les 2 col·leccions ja finalitzades amb més publicacions. Mostrar edito
 Mostrar el país d’origen de l’artista o artistes que han fet més guions.
 \imatge{1}{7}
 \subsection*{Problema 8}
-Mostrar les publicacions amb tots els personatges de tipus “heroe”.
+Mostrar les publicacions amb tots els personatges de tipus “heroe”. Volem destacar que hem entès que hem d'imprimir per pantalla el títol de les publicacions amb tots els seus personatges que siguin del tipus heroi. Per tant, primer hem imprès el títol i, a continuació, la llista dels personatges que compleixin la característica especificada.
 \imatge{1}{8}
 \subsection*{Problema 9}
 Modificar el preu de les publicacions amb stock superior a 20 exemplars i incrementar-lo un 25\%.
@@ -153,5 +153,9 @@ Mostrar ISBN i títol de les publicacions conjuntament amb tota la seva informac
 
 \section{Distribuci\'o de la c\`arrega de treball}
 
-\section{Problemes i conclusions}
+
+\section{Conclusions}
+Aquesta pr\`actica ens ha sigut molt \'ultil per aprendre a utilitzar de forma paralela el mongodb amb python i el NoSQLBooster. Fins ara no haviem utilitzat de forma conjunta aquestes dues eines, i hem vist que \'es una molt bona opci\'o crear les col·leccions a trav\'es de python i despr\'es escriure les queries al NoSQLBooster, que permet una execuci\'o molt pr\`actica i m\'es visual.\\
+Tamb\'e hem vist que la creaci\'o de les col·leccions a partir de documents excel \'es m\'es complicada del que sembla a simple vista, perqu\`e cal tenir en compte molts aspectes, com el tipus de dades, els documents duplicats, les relacions entre col·leccions, etc.
+
 \end{document}
