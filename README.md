@@ -23,3 +23,36 @@ El flag `delete-all` indica que s'eliminaran totes les col·leccions prèvies. <
 El flag `bd` indica el nom de la base de dades que utilitzarem. <br>
 El flag `-f` indica el nom del document Excel amb les dades.
 
+# Estructura de les col·leccions
+### Editorial
+* nom ``string``
+* responsable ``string``
+* país ``string``
+* adreça ``subdocument``: carrer ``string``, número ``int`` i població ``strint``
+
+### Col·lecció
+* nom ``string``
+* editor ``string`` (``_id`` de l'editorial)
+* gènere ``string``
+* idioma ``string``
+* any d'inici ``int``
+* any de finalització ``int``
+* acabada ``bool``
+* publicacions ``list`` of ``subdocuments``
+
+### Publicació
+* ISBN ``string``
+* títol ``string``
+* autor ``string``
+* nombre de pàgines ``int``
+* stock ``int``
+* preu ``float``
+* personatges ``list`` of ``documents``: nom ``string`` i tipus ``string`` de personatge
+* artistes ``list`` of ``subdocuments``: ``_id`` ``string`` i contribució ``string`` de l'artista
+
+### Artista
+* nom artístic ``string``
+* nom ``string``
+* cognom ``string``
+* data de naixement ``Date``
+* país ``string``
