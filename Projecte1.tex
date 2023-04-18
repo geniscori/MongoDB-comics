@@ -81,13 +81,14 @@ adreça & \texttt{subdocument}: carrer (\texttt{string}), n\'umero (\texttt{int}
 \textbf{Col·lecció} & \\
 \midrule
 nom & \texttt{string} \\
-editor & \texttt{string} (\texttt{\_id} de l'editorial) \\
+exemplars totals & \texttt{int} \\
+editorial & \texttt{string} (\texttt{\_id} de l'editorial) \\
 gènere & \texttt{string} \\
 idioma & \texttt{string} \\
 any d'inici & \texttt{int} \\
 any de finalització & \texttt{int} \\
 acabada & \texttt{bool} \\
-publicacions & llista de documents de publicacions \\
+publicacions & \texttt{list} of \texttt{string} (\texttt{_id} de les publicacions) \\
 \midrule
 \textbf{Publicació} & \\
 \midrule
@@ -98,7 +99,8 @@ nombre de pàgines & \texttt{int} \\
 stock & \texttt{int} \\
 preu & \texttt{float} \\
 personatges & \texttt{list} of \texttt{subdocuments}: nom (\texttt{string}) i tipus (\texttt{string}) de personatge \\
-artistes & \texttt{list} of \texttt{subdocuments}: \texttt{\_id} (\texttt{string}) i contribuci\'o (\texttt{string}) de l'artista\\
+dibuixants & \texttt{list} of \texttt{strings} (\texttt{\_id} de l'artista dibuixant)\\
+guionistes & \texttt{list} of \texttt{strings} (\texttt{\_id} de l'artista guionista)\\
 \midrule
 \textbf{Artista} & \\
 \midrule
